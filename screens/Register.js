@@ -32,6 +32,8 @@ const Register = (props) =>{
     const handleToggleSecureTextEntry = () => {
         setIsSecure(!isSecure);
     };
+    const {navigation, route} = props;
+    const {navigate, goBack} = navigation;
     return <View
                 style={{ flex: 10 }}>
         <View
@@ -93,10 +95,16 @@ const Register = (props) =>{
                 <Text>
                     Bạn đã có tài khoản chưa?
                 </Text>
-                <Text
-                    style={styles.login}>
-                        Đăng nhập
-                </Text>
+                <TouchableOpacity
+                    onPress={()=> {
+                        goBack();
+                    }}>
+
+                    <Text
+                        style={styles.login}>
+                            Đăng nhập
+                    </Text>
+                </TouchableOpacity>
             </View>
         </View>
     </View>;
