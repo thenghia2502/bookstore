@@ -1,33 +1,37 @@
 /* eslint-disable prettier/prettier */
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import {AsyncStorage} from 'react-native';
-
+import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../slices/userSlice';
 const Login = (props) =>{
-    const [role, setRole] = useState('');
-    const [token, setToken] = useState('');
     const [username, setUserName] = useState('');
     const [password, setPassWord] = useState('');
+    const [error, setError] = useState(false);
+    const dispatch = useDispatch();
     const hanleLogin = async () => {
+        const loginCredentials = {
+            email: username,
+            password: password,
+          };
         try {
-            const response = await fetch('your_login_api_endpoint', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ /* your login credentials */ }),
-            });
-            const data = await response.json();
-            const { savetoken, saverole} = data;
-            // Lưu token và role vào AsyncStorage
-            await AsyncStorage.setItem('token', savetoken);
-            await AsyncStorage.setItem('role', saverole);
-            // Set token state cho việc hiển thị hoặc kiểm tra trong ứng dụng
-            setToken(savetoken);
-          } catch (error) {
-            console.error('Error logging in:', error);
-          }
-    }
+            const response = await axios.post('http://192.168.43.226:8080/api/auth/authenticate', loginCredentials);
+            const data = response.data;
+            const { message, name, role, token, username} = data;
+            dispatch(loginSuccess({ message, name, role, token, username}));
+            console.log("role:", role);
+            if (role === 'ADMIN') {
+                navigate('UIAdminTab');
+            }
+            else {
+                navigate('UIClientTab');
+            }
+        } catch (e) {
+            setError(true);
+        }
+    };
+    const {navigation, route} = props;
+    const {navigate, goBack} = navigation;
     return <View style={{flex: 10}}>
         <View style={styles.shadow}>
             <View style={{flexDirection: 'row'}}>
@@ -44,21 +48,32 @@ const Login = (props) =>{
         </View>
         <TextInput style={styles.username}
             placeholder="Tài khoản"
-            onChangeText={setUserName}
+            onChangeText={(text) => {
+                setUserName(text);
+                setError(false);
+              }}
             value={username}
             />
         <TextInput style={styles.password}
             placeholder="Mật khẩu"
             secureTextEntry={true}
             value={password}
-            onChangeText={setPassWord}/>
-        <Text style={styles.notification}>Tài khoản hoặc mật khẩu không chính xác</Text>
-        <TouchableOpacity style={styles.button} onPress={hanleLogin()}>
+            onChangeText={(text) => {
+                setPassWord(text);
+                setError(false); 
+              }}/>
+        {error && <Text style={styles.notification}>Tài khoản hoặc mật khẩu không chính xác</Text>}
+        <TouchableOpacity style={styles.button} onPress={hanleLogin}>
             <Text>Đăng nhập</Text>
         </TouchableOpacity>
         <View style={styles.box}>
             <Text>Bạn đã có tài khoản chưa?</Text>
-            <Text style={styles.register}>Đăng ký</Text>
+            <TouchableOpacity
+                onPress={()=> {
+                    navigate('Register');
+                }}>
+                <Text style={styles.register}>Đăng ký</Text>
+            </TouchableOpacity>
         </View>
         </View>
     </View>;
