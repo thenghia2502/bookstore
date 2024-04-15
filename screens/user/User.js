@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Image, Text, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../slices/userSlice';
 import { useNavigation } from '@react-navigation/native';
@@ -13,11 +13,24 @@ const Account = () => {
         navigation.navigate('Login');
     };
     return (
-        <View>
-            <Text>{userData.name}</Text>
-            <Text>{userData.username}</Text>
-            <TouchableOpacity onPress={handleLogout}>
-                <Text style={{textAlign:'center'}}>Dang xuat</Text>
+        <View style={{flex:1, backgroundColor :'#E0E8F6'}}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, backgroundColor: 'white'}}>
+                <TouchableOpacity onPress={()=> navigation.navigate('Homepage')}>
+
+                    <Image source={require('../../assets/left-arrow-svgrepo-com.png')} style={{ height: 30, width: 30, }}></Image>
+                </TouchableOpacity>
+                <Text style={{ fontSize: 20, marginLeft: 20}}>Account</Text>
+            </View>
+            <View style={{ flexDirection: 'row', marginBottom: 20, marginTop: 20}}>
+                <Text style={{width: '20%'}}>Tên:</Text>
+                <Text style={{textAlign: 'center', width: '80%'}}>{userData.name}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', marginBottom:20}}>
+                <Text style={{width: '20%'}}>Email:</Text>
+                <Text style={{textAlign: 'center', width: '80%'}}>{userData.username}</Text>
+            </View>
+            <TouchableOpacity style={{borderWidth: 1, borderColor: 'darkgrey', alignItems: 'center', paddingVertical: 10, backgroundColor: 'white'}} onPress={handleLogout}>
+                <Text style={{textAlign:'center'}}>Đăng xuất</Text>
             </TouchableOpacity>
         </View>
     );

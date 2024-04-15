@@ -1,15 +1,17 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { setBooks, selectBooks } from '../../slices/bookSlice';
 import { selectCategories, setCategories } from '../../slices/categorySlice';
 import { selectCart, setCart } from '../../slices/cartSlice';
+import { selectUserData } from '../../slices/userSlice';
+import { formatCurrency } from '../../utils';
 const Homepage = (props) => {
   const dispatch = useDispatch();
-  const userData = useSelector(state => state.user.userData);
+  const userData = useSelector(selectUserData);
   const books = useSelector(selectBooks);
   const cart = useSelector(selectCart);
   const [data, setData] = useState([]);
@@ -25,7 +27,7 @@ const Homepage = (props) => {
         },
       };
       try {
-        const response = await axios.get('http://192.168.43.226:8080/api/client/book/getAll', config);
+        const response = await axios.get(`http://192.168.43.226:8080/api/client/book/getAll`, config);
         dispatch(setBooks(response.data.data));
       } catch (error) {
         console.error('Error getting books:', error);
@@ -33,26 +35,6 @@ const Homepage = (props) => {
     };
     // Gọi hàm getBook() ngay khi component được tạo
     getBook();
-  }, [userData, dispatch]);
-  useEffect(() => {
-    const getCategories = async () => {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userData.token}`,
-        },
-      };
-      try {
-        const response = await axios.get('http://192.168.43.226:8080/api/client/categories', config);
-        dispatch(setCategories(response.data));
-        console.log('cate: ', response.data);
-      } catch (error) {
-        console.error('Error getting categories:', error);
-      }
-    };
-    // Gọi hàm getBook() ngay khi component được tạo
-    getCategories();
-  }, [userData, dispatch]);
-  useEffect(() => {
     const getCart = async () => {
       const config = {
         headers: {
@@ -67,6 +49,22 @@ const Homepage = (props) => {
       }
     };
     getCart();
+    const getCategories = async () => {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userData.token}`,
+        },
+      };
+      try {
+        const response = await axios.get('http://192.168.43.226:8080/api/client/categories', config);
+        dispatch(setCategories(response.data));
+      } catch (error) {
+        console.error('Error getting categories:', error);
+      }
+    };
+    getCategories();
+  }, [userData, dispatch]);
+  useEffect(() => {
   }, [userData, dispatch]);
   useEffect(() => {
     setData(books);
@@ -92,33 +90,38 @@ const Homepage = (props) => {
   };
   const { navigation, route } = props;
   const { navigate, goBack } = navigation;
-  const addBookToCart = (book) => {
-    const existingBook = cart.find(item => item.id === book.id);
-    if (existingBook) {
-      // Nếu sách đã tồn tại, tăng số lượng lên 1
-      const updatedCart = cart.map(item => {
-        if (item.id === book.id) {
-          return { ...item, quantity: item.quantity + 1 };
-        }
-        return item;
-      });
-      dispatch(setCart(updatedCart));
-    } else {
-      // Nếu sách chưa tồn tại, thêm mới vào giỏ hàng với số lượng là 1
-      dispatch.apply(setCart([...cart, { ...book, quantity: 1 }]));
+  const addBookToCart = async (book) => {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${userData.token}`,
+      },
+    };
+    try {
+      await axios.post(`http://192.168.43.226:8080/api/client/cart/add/${book.id}`, config);
+      const response = await axios.get('http://192.168.43.226:8080/api/client/cart/getAll', config);
+      dispatch(setCart(response.data.data));
+      Alert.alert('Success', 'Book added successfully!');
+    } catch (error) {
+      console.error('Error getting cart:', error);
     }
   };
+  const handlebook = (book) => {
+    navigate('BookDetail', { book: book });
+  };
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#E0E8F6' }}>
       <View style={styles.searchContainer}>
-        <TextInput placeholder="Tìm kiếm" style={styles.searchInput} value={namebookfind} onChangeText={setNameBookFind}/>
+        <TextInput placeholder="Tìm kiếm" style={styles.searchInput} value={namebookfind} onChangeText={setNameBookFind} />
         <TouchableOpacity
-                onPress={findbook}>
-                <Image source={require('../../assets/magnifying-glass-backup-svgrepo-com.png')} style={styles.icon} />
+          onPress={findbook}>
+          <Image source={require('../../assets/magnifying-glass-backup-svgrepo-com.png')} style={styles.icon} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigate('Cart')}>
+        <TouchableOpacity style={{marginRight: 10}} onPress={() => navigate('Cart')}>
 
           <Image source={require('../../assets/shopping-cart-solid-svgrepo-com.png')} style={styles.icon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigate('Account')}>
+          <Image source={require('../../assets/user.png')} style={styles.icon} ></Image>
         </TouchableOpacity>
       </View>
       <View style={styles.categoriesContainer}>
@@ -140,20 +143,20 @@ const Homepage = (props) => {
       <View style={styles.bookContainer}>
         <FlatList
           data={filteredData}
+          numColumns={2} // Đặt số cột thành 2
           keyExtractor={(item) => item.id}
-          // Hiển thị 2 cột
-          renderItem={({ item }) => (
-            <View key={item.id} style={[styles.bookbox]} >
+          renderItem={({ item, index }) => (
+            <TouchableOpacity onPress={()=> handlebook(item)} key={item.id} style={[styles.bookbox, { marginLeft: index % 2 === 0 ? 10 : 5, marginRight: index % 2 === 0 ? 5 : 10, marginTop: index === 0 || index === 1 ? 0 : 5, marginBottom: 5 }]} >
               <Image source={require('../../assets/yeu-di-dung-so_128823_1.jpg')} style={styles.image} resizeMode="contain" />
               <View style={styles.bookInfo}>
-                <Text>{item.name}</Text>
-                <Text>{item.author}</Text>
-                <Text>{item.price}</Text>
+                <Text style={{ marginBottom: 3, }}>{item.name}</Text>
+                <Text style={{ marginBottom: 6, }}>{item.author}</Text>
+                <Text >{formatCurrency(item.price)}</Text>
               </View>
-              <TouchableOpacity onPress={()=> addBookToCart(item)}>
-                <Text>+</Text>
+              <TouchableOpacity onPress={() => addBookToCart(item)} style={{ backgroundColor: 'white', width: '100%' }}>
+                <Text style={{ backgroundColor: 'white', width: '100%', textAlign: 'center', paddingVertical:10 }}>Thêm vào giỏ hàng</Text>
               </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           )}
         />
       </View>
@@ -166,9 +169,11 @@ const styles = StyleSheet.create({
     width: 30,
   },
   searchContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    margin: 10,
+    padding: 10,
+    backgroundColor: 'white',
   },
   searchInput: {
     flex: 1,
@@ -179,11 +184,10 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   categoryList: {
-    paddingHorizontal: 20,
-    paddingVertical: 5,
+    // marginBottom: 10,
   },
   categoryItem: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: 'white',
     borderRadius: 5,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -191,27 +195,30 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 16,
-    fontWeight: 'bold',
   },
   bookContainer: {
-    paddingHorizontal: 10,
+    flex: 9,
+    paddingBottom: 10,
   },
   categoriesContainer: {
     paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   bookbox: {
-    flexDirection: 'row',
+    flex: 0.5,
     alignItems: 'center',
-    marginBottom: 10,
+    backgroundColor: '#ffffff',
   },
   image: {
-    height: 100,
-    width: '50%',
-    marginRight: 10,
-    marginLeft: 10,
+    width: '100%',
+    backgroundColor: 'white',
+    paddingBottom: 10,
   },
   bookInfo: {
-    flex: 1,
+    paddingTop: 10,
+    paddingHorizontal: 10,
+    backgroundColor: 'white',
+    width: '100%',
   },
 });
 export default Homepage;

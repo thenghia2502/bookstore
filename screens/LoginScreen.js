@@ -4,7 +4,6 @@ import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'reac
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../slices/userSlice';
-
 const Login = (props) =>{
     const [username, setUserName] = useState('');
     const [password, setPassWord] = useState('');
@@ -51,7 +50,7 @@ const Login = (props) =>{
             placeholder="Tài khoản"
             onChangeText={(text) => {
                 setUserName(text);
-                setError(false); // Reset state lỗi khi người dùng thay đổi mật khẩu
+                setError(false);
               }}
             value={username}
             />
@@ -61,7 +60,7 @@ const Login = (props) =>{
             value={password}
             onChangeText={(text) => {
                 setPassWord(text);
-                setError(false); // Reset state lỗi khi người dùng thay đổi mật khẩu
+                setError(false); 
               }}/>
         {error && <Text style={styles.notification}>Tài khoản hoặc mật khẩu không chính xác</Text>}
         <TouchableOpacity style={styles.button} onPress={hanleLogin}>

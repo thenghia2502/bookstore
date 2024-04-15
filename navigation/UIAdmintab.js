@@ -7,17 +7,22 @@ import UpdateBook from '../screens/admin/Update';
 import OrderManager from '../screens/admin/Order';
 import UserManager from '../screens/admin/User';
 import Account from '../screens/admin/Account';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {NavigationContainer} from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
-const UIAdminTab = (props) => {
-    return <Tab.Navigator screenOptions={{headerShown:false}}>
-        <Tab.Screen name={'AdminHomepage'} component={AdminHomepage}/>
-        <Tab.Screen name={'AddBook'} component={AddBook}/>
-        <Tab.Screen name={'UpdateBook'} component={UpdateBook} tabBarOptions={{ tabBarVisible: false}}/>
-        <Tab.Screen name={'OrderManager'} component={OrderManager} options={{ }}/>
-        <Tab.Screen name={'UserManager'} component={UserManager}/>
-        <Tab.Screen name={'Account'} component={Account}/>
-    </Tab.Navigator>;
+const Stack = createNativeStackNavigator();
+const UIAdminTab = () => {
+    return (
+        <Stack.Navigator initialRouteName='AdminHomepage' screenOptions={{ headerShown: false }}>
+            <Stack.Screen name={'AdminHomepage'} component={AdminHomepage}/>
+            <Stack.Screen name={'AddBook'} component={AddBook}/>
+            <Stack.Screen name={'UpdateBook'} component={UpdateBook} options={{ tabBarVisible: false }}/>
+            <Stack.Screen name={'OrderManager'} component={OrderManager}/>
+            <Stack.Screen name={'UserManager'} component={UserManager}/>
+            <Stack.Screen name={'Account'} component={Account}/>
+        </Stack.Navigator>
+    );
 };
 
 export default UIAdminTab;
